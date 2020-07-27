@@ -59,7 +59,7 @@ provider:
 #    - exclude-me-dir/**
 
 # npm install --arch=x64 --platform=linux sharp
-
+# http://cdn-dyn-2.s3-website-us-east-1.amazonaws.com/300x300/test.jpg
 functions:
   resizer:
     handler: handler.resizer

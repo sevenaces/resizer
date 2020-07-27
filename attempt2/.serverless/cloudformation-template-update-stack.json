@@ -1,0 +1,496 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "ServerlessDeploymentBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ServerlessDeploymentBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "ServerlessDeploymentBucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": false
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CdnDashimageLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/s3-resize-cf-dev-cdn-image"
+      }
+    },
+    "IamRoleLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "s3-resize-cf-dev",
+                  "lambda"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/s3-resize-cf-dev*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/s3-resize-cf-dev*:*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": "s3:PutObject",
+                  "Resource": "arn:aws:s3:::cdn-dyn-4/*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": "s3:GetObject",
+                  "Resource": "arn:aws:s3:::cdn-dyn-5/*"
+                }
+              ]
+            }
+          }
+        ],
+        "Path": "/",
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              "s3-resize-cf-dev",
+              {
+                "Ref": "AWS::Region"
+              },
+              "lambdaRole"
+            ]
+          ]
+        }
+      }
+    },
+    "CdnDashimageLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/s3-resize-cf/dev/1595766543599-2020-07-26T12:29:03.599Z/s3-resize-cf.zip"
+        },
+        "FunctionName": "s3-resize-cf-dev-cdn-image",
+        "Handler": "src/index.handler",
+        "MemorySize": 3008,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs12.x",
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "CDN_BUCKET_NAME": "cdn-dyn-5",
+            "PRIVATE_BUCKET_NAME": "cdn-dyn-4"
+          }
+        }
+      },
+      "DependsOn": [
+        "CdnDashimageLogGroup",
+        "IamRoleLambdaExecution"
+      ]
+    },
+    "CdnDashimageLambdaVersion362CJzMOtRxQRbH43MhdlhiVXkzWpIsHg4QqIMtSNCQ": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "CdnDashimageLambdaFunction"
+        },
+        "CodeSha256": "Q+ElmdzX4WDZoOgIVyRdo1haDn5YpYb7QvBEo4oka0c="
+      }
+    },
+    "HttpApi": {
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Properties": {
+        "Name": "dev-s3-resize-cf",
+        "ProtocolType": "HTTP"
+      }
+    },
+    "HttpApiStage": {
+      "Type": "AWS::ApiGatewayV2::Stage",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "StageName": "$default",
+        "AutoDeploy": true
+      }
+    },
+    "CdnDashimageLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "CdnDashimageLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationCdnDashimage": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "CdnDashimageLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "1.0",
+        "TimeoutInMillis": 6500
+      }
+    },
+    "HttpApiRouteGetImageWidthVarImageVar": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "GET /image/{width}/{image+}",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationCdnDashimage"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationCdnDashimage"
+    },
+    "PrivateBucketBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "cdn-dyn-4"
+      }
+    },
+    "CDNBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "cdn-dyn-5"
+      }
+    },
+    "CDNBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "CDNBucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Resource": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "CDNBucket",
+                        "Arn"
+                      ]
+                    },
+                    "*"
+                  ]
+                ]
+              },
+              "Principal": {
+                "CanonicalUser": {
+                  "Fn::GetAtt": [
+                    "CDNOriginAccessIdentity",
+                    "S3CanonicalUserId"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CDNOriginAccessIdentity": {
+      "Type": "AWS::CloudFront::CloudFrontOriginAccessIdentity",
+      "Properties": {
+        "CloudFrontOriginAccessIdentityConfig": {
+          "Comment": "Origin Access Identity to access private bucket"
+        }
+      }
+    },
+    "CDNCloudFront": {
+      "Type": "AWS::CloudFront::Distribution",
+      "DependsOn": [
+        "CDNBucket"
+      ],
+      "Properties": {
+        "DistributionConfig": {
+          "OriginGroups": {
+            "Items": [
+              {
+                "Id": "DynamicImageGroup",
+                "Members": {
+                  "Items": [
+                    {
+                      "OriginId": "S3Origin"
+                    },
+                    {
+                      "OriginId": "APIGatewayOrigin"
+                    }
+                  ],
+                  "Quantity": 2
+                },
+                "FailoverCriteria": {
+                  "StatusCodes": {
+                    "Items": [
+                      403
+                    ],
+                    "Quantity": 1
+                  }
+                }
+              }
+            ],
+            "Quantity": 1
+          },
+          "Origins": [
+            {
+              "Id": "S3Origin",
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "CDNBucket",
+                  "RegionalDomainName"
+                ]
+              },
+              "S3OriginConfig": {
+                "OriginAccessIdentity": {
+                  "Fn::Join": [
+                    "/",
+                    [
+                      "origin-access-identity",
+                      "cloudfront",
+                      {
+                        "Ref": "CDNOriginAccessIdentity"
+                      }
+                    ]
+                  ]
+                }
+              }
+            },
+            {
+              "Id": "APIGatewayOrigin",
+              "DomainName": {
+                "Fn::Join": [
+                  ".",
+                  [
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "execute-api",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "amazonaws.com"
+                  ]
+                ]
+              },
+              "CustomOriginConfig": {
+                "HTTPSPort": 443,
+                "OriginProtocolPolicy": "https-only"
+              }
+            }
+          ],
+          "DefaultCacheBehavior": {
+            "AllowedMethods": [
+              "GET",
+              "HEAD",
+              "OPTIONS"
+            ],
+            "Compress": true,
+            "ForwardedValues": {
+              "QueryString": true,
+              "Cookies": {
+                "Forward": "none"
+              },
+              "Headers": [
+                "Access-Control-Request-Headers",
+                "Access-Control-Request-Method",
+                "Origin"
+              ]
+            },
+            "TargetOriginId": "DynamicImageGroup",
+            "ViewerProtocolPolicy": "redirect-to-https"
+          },
+          "Enabled": true,
+          "HttpVersion": "http2",
+          "PriceClass": "PriceClass_All",
+          "ViewerCertificate": {
+            "CloudFrontDefaultCertificate": true
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": {
+        "Ref": "ServerlessDeploymentBucket"
+      }
+    },
+    "CdnDashimageLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "CdnDashimageLambdaVersion362CJzMOtRxQRbH43MhdlhiVXkzWpIsHg4QqIMtSNCQ"
+      }
+    },
+    "HttpApiUrl": {
+      "Description": "URL of the HTTP API",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "HttpApi"
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region"
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix"
+            }
+          ]
+        ]
+      }
+    },
+    "CDNDomainName": {
+      "Value": {
+        "Fn::GetAtt": "CDNCloudFront.DomainName"
+      }
+    }
+  }
+}
