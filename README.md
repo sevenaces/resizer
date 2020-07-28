@@ -50,6 +50,8 @@ The broad flow is as follows:
 ### Support to be added
 1. To leave one of height/width as empty, and have this automatically resize image
 2. Just reformat image to webp, without changing size 
+3. Provide list of ALLOWED_RESOLUTIONS and only deliver images on those sizes
+4. The code needs to be majorly cleaned up.
 
 ## Appendix
 
