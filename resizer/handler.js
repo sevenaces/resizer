@@ -9,28 +9,20 @@ const Sharp = require('sharp');
 const BUCKET = process.env.BUCKET;
 const URL = process.env.URL;
 const ALLOWED_RESOLUTIONS = process.env.ALLOWED_RESOLUTIONS ? new Set(process.env.ALLOWED_RESOLUTIONS.split(/\s*,\s*/)) : new Set([]);
+const ALLOWED_PARAMS = ['webp']
 
 module.exports.resizer = function (event, context, callback) {
     const key = event.queryStringParameters.key;
-
-    // const match = key.match(/((\d+)x(\d+))\/(.*)/);
-
-    //Check if requested resolution is allowed
-    // if(0 != ALLOWED_RESOLUTIONS.size && !ALLOWED_RESOLUTIONS.has(match[1]) ) {
-    //   callback(null, {
-    //     statusCode: '403',
-    //     headers: {},
-    //     body: '',
-    //   });
-    //   return;
-    // }
-
     const match = key.match(/\d+x\d+,.*\/.*/)
     let params = match[0].split(',');
+    params[params.length-1] = params[params.length-1].split('/')[0]
+    params[params.length] = params[params.length-1].split('/')[1]
     let originalKey = '';
     let args = [];
     let width = 0;
     let height = 0;
+
+    let log = "";
 
     originalKey = params[params.length - 1];
 
@@ -54,14 +46,11 @@ module.exports.resizer = function (event, context, callback) {
     }
 
 
-    // const width = parseInt(match[2], 10);
-    // const height = parseInt(match[3], 10);
-    // const originalKey = match[4];
-
-    if (args.include('webp')) {
+    if (args.includes('webp'))
+    {
         S3.getObject({Bucket: BUCKET, Key: originalKey}).promise()
             .then(data => Sharp(data.Body)
-                .resize({width: width; height: height})
+                .resize({width: width, height: height})
                 .toFormat('webp')
                 .webp({lossless: true})
                 .toBuffer()
@@ -79,13 +68,15 @@ module.exports.resizer = function (event, context, callback) {
                     body: '',
                 })
             )
-            .catch(err => callback(err))
+            .catch(err => callback(err, {
+                statusCode: '404',
+                body: err
+            }))
     } else {
         S3.getObject({Bucket: BUCKET, Key: originalKey}).promise()
             .then(data => Sharp(data.Body)
-                .resize({width: width; height: height})
+                .resize({width: width, height: height})
                 .toFormat('png')
-                .webp({lossless: true})
                 .toBuffer()
             )
             .then(buffer => S3.putObject({
@@ -101,7 +92,9 @@ module.exports.resizer = function (event, context, callback) {
                     body: '',
                 })
             )
-            .catch(err => callback(err))
+            .catch(err => callback(err, {
+                statusCode: '404',
+                body: err
+            }));
     }
-
 }
