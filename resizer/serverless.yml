@@ -7,8 +7,8 @@ provider:
 #  stage: dev
 #  region: us-east-1
   environment:
-    BUCKET: cdn-dyn-2
-    URL: http://cdn-dyn-2.s3-website-us-east-1.amazonaws.com
+    BUCKET: test-cdn-tickle
+    URL: http://test-cdn-tickle.s3-website-us-east-1.amazonaws.com
 
 functions:
   resizer:
@@ -18,3 +18,4 @@ functions:
           path: resizer
           method: get
       - s3: ${env:BUCKET}
+

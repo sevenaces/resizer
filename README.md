@@ -25,7 +25,7 @@ The broad flow is as follows:
     a. Create Lambda Functions, API Gateway
     b. Read/Write from S3 Buckets (at lease the one you are operating with)
     c. Can create Cloudwatch Log Groups (Optional: So that you can see logs)
-2. Create S3 bucket, if not already. Let's call it `SOURCE_BUCKET`
+2. Create S3 bucket, if not already. Let's call it `SOURCE_BUCKET`. Ensure you don't `Block Public Access` as well as use the Policy from the appendix to make items public.
 3. Set up `Static Website Hosting` for it, and note the Hosted URL. Let's call that `SOURCE_BUCKET_HOSTED_URL`
 4. Open the Repo, and via shell, head to `resizer` folder
 5. Configure Lambda method by editing the `serverless.yml`. Things to configure:
@@ -38,7 +38,7 @@ The broad flow is as follows:
     a. `API_GATEWAY_HOST`: `{some_id}.execute-api.{aws-region}.amazonaws.com` (Note, no `https`)  
     a. `API_GATEWAY_PATH`: `{stage}/resizer`
 10. From the appendix, copy the `S3 Routing Rules Template` and replace these two variables. This can be pasted in the `S3 Static Website Hosting` section on S3, under Rewriting Rules
-11. Create Cloudfront Distribution with `SOURCE_BUCKET` as the `ORIGIN`. Once done, note the URL of the distribution. Let's call that `CLOUDFRONT_URL`
+11. Create Cloudfront Distribution with `SOURCE_BUCKET_HOSTED_URL` as the `ORIGIN`. Once done, note the URL of the distribution. Let's call that `CLOUDFRONT_URL`
 12. (Optional) You can map a custom domain to this `CLOUDFRONT_URL`
 
 ### Usage
@@ -59,6 +59,28 @@ The broad flow is as follows:
 Run the following two commands:
 1. `rm -rf node_modules/sharp`
 2. `npm install --arch=x64 --platform=linux sharp`
+
+### S3 Public Bucket Policy
+Don't forget to replace `BUCKET_NAME` with your `BUCKET_NAME`
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicRead",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:GetObject",
+                "s3:GetObjectVersion"
+            ],
+            "Resource": "arn:aws:s3:::{{BUCKET_NAME}}/*"
+        }
+    ]
+}
+``` 
+
 
 ### S3 Routing Rules Template
 
