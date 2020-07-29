@@ -45,7 +45,7 @@ The broad flow is as follows:
 
 1. Say there is an image in your S3 bucket, at address `s3://folder/image.jpg`, then it'll be available on cloudfront at `CLOUDFRONT_URL/folder/image.jpg`
 2. To get a resized image, go to `CLOUDFRONT_URL/{width}x{height}/folder/image.jpg` 
-3. To get a resized image, in webp format, go to `CLOUDFRONT_URL/{width}x{height},webp/folder/image.jpg`
+3. To get a resized image, in webp format, go to `CLOUDFRONT_URL/webp/{width}x{height}/folder/image.jpg`
 
 ### Support to be added
 1. To leave one of height/width as empty, and have this automatically resize image
