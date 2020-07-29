@@ -11,6 +11,7 @@ const URL = process.env.URL;
 const ALLOWED_RESOLUTIONS = process.env.ALLOWED_RESOLUTIONS
   ? new Set(process.env.ALLOWED_RESOLUTIONS.split(/\s*,\s*/))
   : new Set([]);
+const maxAge = 14 * 24 * 60 * 60
 
 module.exports.resizer = function(event, context, callback) {
   const key = event.queryStringParameters.key;
@@ -43,6 +44,7 @@ module.exports.resizer = function(event, context, callback) {
         Body: buffer,
         Bucket: BUCKET,
         ContentType: "image/png",
+        CacheControl: `max-age=${maxAge}`,
         Key: key
       }).promise()
     )
