@@ -4,11 +4,11 @@ provider:
   runtime: nodejs12.x
 
 # you can overwrite defaults here
-#  stage: dev
+  stage: prod
 #  region: us-east-1
   environment:
-    BUCKET: test-cdn-tickle
-    URL: http://test-cdn-tickle.s3-website-us-east-1.amazonaws.com
+    BUCKET: cdn.tickle.life
+    URL: http://cdn.tickle.life.s3-website-us-east-1.amazonaws.com
 
 functions:
   resizer:

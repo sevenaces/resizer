@@ -15,7 +15,7 @@ const maxAge = 14 * 24 * 60 * 60
 
 module.exports.resizer = function (event, context, callback) {
     const key = event.queryStringParameters.key;
-    const match = key.match(/(?<webpsupport>webp)?\/?(?<dimensions>(?<height>\d+)x(?<width>\d+))\/(?<originalKey>.*)/);
+    const match = key.match(/(?<webpsupport>webp)?\/?(?<dimensions>(?<width>\d+)x(?<height>\d+))\/(?<originalKey>.*)/);
 
     // Check if requested resolution is allowed
     if (0 != ALLOWED_RESOLUTIONS.size && !ALLOWED_RESOLUTIONS.has(match.groups.dimensions)) {
