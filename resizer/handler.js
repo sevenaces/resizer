@@ -27,9 +27,16 @@ module.exports.resizer = function (event, context, callback) {
         return;
     }
 
-    const width = parseInt(match.groups.width, 10);
-    const height = parseInt(match.groups.height, 10);
+    let width = parseInt(match.groups.width, 10);
+    let height = parseInt(match.groups.height, 10);
     const originalKey = match.groups.originalKey;
+
+    if (width === 0) {
+        width = null;
+    }
+    if (height === 0) {
+        height = null;
+    }
 
     let webpSupport = match.groups.webpsupport;
 
