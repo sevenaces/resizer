@@ -104,7 +104,8 @@ Don't forget to replace `BUCKET_NAME` with your `BUCKET_NAME`
 
 
 ## Credits
-This is based on [this hackernoon post](https://hackernoon.com/image-resizing-after-upload-with-amazon-s3-aws-lambda-and-cloudfront-for-ssl-loce3y0h) with some changes.
+1. To [@pavangowdasu](https://github.com/pavangowdasu) with a lot of JS code! And in general, helping me with code always! 
+2. This is based on [this hackernoon post](https://hackernoon.com/image-resizing-after-upload-with-amazon-s3-aws-lambda-and-cloudfront-for-ssl-loce3y0h) with some changes.
 
 ## How to contribute
 Feel free to fork the repo and submit a pull request. I'm fairly novice at Javascript so I'm pretty sure someone else can seriously improve this.
