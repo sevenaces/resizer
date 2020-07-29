@@ -25,7 +25,7 @@ The broad flow is as follows:
     a. Create Lambda Functions, API Gateway
     b. Read/Write from S3 Buckets (at lease the one you are operating with)
     c. Can create Cloudwatch Log Groups (Optional: So that you can see logs)
-2. Create S3 bucket, if not already. Let's call it `SOURCE_BUCKET`
+2. Create S3 bucket, if not already. Let's call it `SOURCE_BUCKET`. Ensure you don't `Block Public Access` as well as use the Policy from the appendix to make items public.
 3. Set up `Static Website Hosting` for it, and note the Hosted URL. Let's call that `SOURCE_BUCKET_HOSTED_URL`
 4. Open the Repo, and via shell, head to `resizer` folder
 5. Configure Lambda method by editing the `serverless.yml`. Things to configure:
@@ -38,14 +38,14 @@ The broad flow is as follows:
     a. `API_GATEWAY_HOST`: `{some_id}.execute-api.{aws-region}.amazonaws.com` (Note, no `https`)  
     a. `API_GATEWAY_PATH`: `{stage}/resizer`
 10. From the appendix, copy the `S3 Routing Rules Template` and replace these two variables. This can be pasted in the `S3 Static Website Hosting` section on S3, under Rewriting Rules
-11. Create Cloudfront Distribution with `SOURCE_BUCKET` as the `ORIGIN`. Once done, note the URL of the distribution. Let's call that `CLOUDFRONT_URL`
+11. Create Cloudfront Distribution with `SOURCE_BUCKET_HOSTED_URL` as the `ORIGIN`. Once done, note the URL of the distribution. Let's call that `CLOUDFRONT_URL`
 12. (Optional) You can map a custom domain to this `CLOUDFRONT_URL`
 
 ### Usage
 
 1. Say there is an image in your S3 bucket, at address `s3://folder/image.jpg`, then it'll be available on cloudfront at `CLOUDFRONT_URL/folder/image.jpg`
 2. To get a resized image, go to `CLOUDFRONT_URL/{width}x{height}/folder/image.jpg` 
-3. To get a resized image, in webp format, go to `CLOUDFRONT_URL/{width}x{height},webp/folder/image.jpg`
+3. To get a resized image, in webp format, go to `CLOUDFRONT_URL/webp/{width}x{height}/folder/image.jpg`
 
 ### Support to be added
 1. To leave one of height/width as empty, and have this automatically resize image
@@ -59,6 +59,28 @@ The broad flow is as follows:
 Run the following two commands:
 1. `rm -rf node_modules/sharp`
 2. `npm install --arch=x64 --platform=linux sharp`
+
+### S3 Public Bucket Policy
+Don't forget to replace `BUCKET_NAME` with your `BUCKET_NAME`
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicRead",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:GetObject",
+                "s3:GetObjectVersion"
+            ],
+            "Resource": "arn:aws:s3:::{{BUCKET_NAME}}/*"
+        }
+    ]
+}
+``` 
+
 
 ### S3 Routing Rules Template
 
@@ -82,7 +104,8 @@ Run the following two commands:
 
 
 ## Credits
-This is based on [this hackernoon post](https://hackernoon.com/image-resizing-after-upload-with-amazon-s3-aws-lambda-and-cloudfront-for-ssl-loce3y0h) with some changes.
+1. To [@pavangowdasu](https://github.com/pavangowdasu) with a lot of JS code! And in general, helping me with code always! 
+2. This is based on [this hackernoon post](https://hackernoon.com/image-resizing-after-upload-with-amazon-s3-aws-lambda-and-cloudfront-for-ssl-loce3y0h) with some changes.
 
 ## How to contribute
 Feel free to fork the repo and submit a pull request. I'm fairly novice at Javascript so I'm pretty sure someone else can seriously improve this.
