@@ -3,6 +3,15 @@
 This deployment/process ensures that cloudfront can deliver images on the fly which are resized based on the given dimensions, and in the format needed.
 For now, this supports only `webp` or `png` format. 
 
+## Usage
+
+1. Say there is an image in your S3 bucket, at address `s3://folder/image.jpg`, then it'll be available on cloudfront at `CLOUDFRONT_URL/folder/image.jpg`
+2. To get a resized image, go to `CLOUDFRONT_URL/{width}x{height}/folder/image.jpg` 
+3. To get a resized image, in webp format, go to `CLOUDFRONT_URL/webp/{width}x{height}/folder/image.jpg`
+4. To get a resized image with only one dimension, say height, pass the other as 0. This would always maintain the aspect ratio
+5. To convert an image to webp, without resizing it, pass both height and width as 0.
+
+
 ## Architecture:
 
 The broad flow is as follows:
@@ -41,17 +50,6 @@ The broad flow is as follows:
 11. Create Cloudfront Distribution with `SOURCE_BUCKET_HOSTED_URL` as the `ORIGIN`. Once done, note the URL of the distribution. Let's call that `CLOUDFRONT_URL`
 12. (Optional) You can map a custom domain to this `CLOUDFRONT_URL`
 
-### Usage
-
-1. Say there is an image in your S3 bucket, at address `s3://folder/image.jpg`, then it'll be available on cloudfront at `CLOUDFRONT_URL/folder/image.jpg`
-2. To get a resized image, go to `CLOUDFRONT_URL/{width}x{height}/folder/image.jpg` 
-3. To get a resized image, in webp format, go to `CLOUDFRONT_URL/webp/{width}x{height}/folder/image.jpg`
-
-### Support to be added
-1. To leave one of height/width as empty, and have this automatically resize image
-2. Just reformat image to webp, without changing size 
-3. Provide list of ALLOWED_RESOLUTIONS and only deliver images on those sizes
-4. The code needs to be majorly cleaned up.
 
 ## Appendix
 
