@@ -2,13 +2,17 @@ service: resizer
 provider:
   name: aws
   runtime: nodejs12.x
+  memorySize: 128
 
 # you can overwrite defaults here
   stage: prod
+#  stage: django
 #  region: us-east-1
   environment:
     BUCKET: cdn.tickle.life
     URL: http://cdn.tickle.life.s3-website-us-east-1.amazonaws.com
+#    BUCKET: tlc-cdn
+#    URL: http://tlc-cdn.s3-website-us-east-1.amazonaws.com
 
 functions:
   resizer:
