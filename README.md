@@ -36,19 +36,19 @@ The broad flow is as follows:
     c. Can create Cloudwatch Log Groups (Optional: So that you can see logs)
 2. Create S3 bucket, if not already. Let's call it `SOURCE_BUCKET`. Ensure you don't `Block Public Access` as well as use the Policy from the appendix to make items public.
 3. Set up `Static Website Hosting` for it, and note the Hosted URL. Let's call that `SOURCE_BUCKET_HOSTED_URL`
-4. Open the Repo, and via shell, head to `resizer` folder
-5. Configure Lambda method by editing the `serverless.yml`. Things to configure:
+4. Create Cloudfront Distribution with `SOURCE_BUCKET_HOSTED_URL` as the `ORIGIN`. Once done, note the URL of the distribution. Let's call that `CLOUDFRONT_URL`
+5. (Optional) You can map a custom domain to this `CLOUDFRONT_URL`
+6. Open the Repo, and via shell, head to `resizer` folder
+7. Configure Lambda method by editing the `serverless.yml`. Things to configure:
     a. `BUCKET`: Name of `SOURCE_BUCKET`
-    b. `URL`: `SOURCE_BUCKET_HOSTED_URL` (This would be with the `http`. Note, that this most likely won't be `https`, and that's not a problem)
-6. Run `npm install` (This would install all needed packages)
-7. This would install the wrong version of `sharp` the library used to resize images. Since you most likely aren't using the same OS as Lambda. To fix this, refer to appendix.
-8. Run `sls deploy`
-9. Once the deploy is done, this would also create an API Endpoint. Note that URL. Let's call that `API_GATEWAY_URL`. This would of the form `https://{some_id}.execute-api.{aws-region}.amazonaws.com/{stage}/resizer`. Let's split this into two parts. Let's call them:
+    b. `URL`: `CLOUDFRONT_URL` 
+8. Run `npm install` (This would install all needed packages)
+9. This would install the wrong version of `sharp` the library used to resize images. Since you most likely aren't using the same OS as Lambda. To fix this, refer to appendix.
+10. Run `sls deploy`
+11. Once the deploy is done, this would also create an API Endpoint. Note that URL. Let's call that `API_GATEWAY_URL`. This would of the form `https://{some_id}.execute-api.{aws-region}.amazonaws.com/{stage}/resizer`. Let's split this into two parts. Let's call them:
     a. `API_GATEWAY_HOST`: `{some_id}.execute-api.{aws-region}.amazonaws.com` (Note, no `https`)  
     a. `API_GATEWAY_PATH`: `{stage}/resizer`
-10. From the appendix, copy the `S3 Routing Rules Template` and replace these two variables. This can be pasted in the `S3 Static Website Hosting` section on S3, under Rewriting Rules
-11. Create Cloudfront Distribution with `SOURCE_BUCKET_HOSTED_URL` as the `ORIGIN`. Once done, note the URL of the distribution. Let's call that `CLOUDFRONT_URL`
-12. (Optional) You can map a custom domain to this `CLOUDFRONT_URL`
+12. From the appendix, copy the `S3 Routing Rules Template` and replace these two variables. This can be pasted in the `S3 Static Website Hosting` section on S3, under Rewriting Rules
 
 
 ## Appendix
