@@ -49,7 +49,8 @@ The broad flow is as follows:
     a. `API_GATEWAY_HOST`: `{some_id}.execute-api.{aws-region}.amazonaws.com` (Note, no `https`)  
     a. `API_GATEWAY_PATH`: `{stage}/resizer`
 12. From the appendix, copy the `S3 Routing Rules Template` and replace these two variables. This can be pasted in the `S3 Static Website Hosting` section on S3, under Rewriting Rules
-
+13. To avoid Cloudfront from caching the redirect, we have to set custom TTL on cloudfront. Set Minimum and Default to 0. (Since the assets added via this lambda automatically have a TTL/Max-age, those would get overwritten, just not for the redirects)
+14. Please note, that if you are pushing images to this S3 bucket, make sure you explicitly set a max-age
 
 ## Appendix
 
