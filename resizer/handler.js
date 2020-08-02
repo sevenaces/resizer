@@ -43,8 +43,9 @@ module.exports.resizer = function (event, context, callback) {
     S3.getObject({Bucket: BUCKET, Key: originalKey})
         .promise()
         .then(function (data) {
-            let image = Sharp(data.Body).resize(width, height)
-
+            let image = Sharp(data.Body).resize(width, height, {
+                withoutEnlargement: true
+              })
             if (webpSupport) {
                 image = image.toFormat("webp")
             } else {
@@ -67,10 +68,16 @@ module.exports.resizer = function (event, context, callback) {
         })
         .then(() =>
             callback(null, {
-                statusCode: "301",
-                headers: {location: `${URL}/${key}`},
-                body: ""
-            })
+                statusCode: "307",
+                headers: {
+                    location: `${URL}/${key}`,
+                    "Cache-Control": "no-cache, no-store, private"
+                },
+
+                    body: ""
+
+                }
+            )
         )
         .catch(err => callback(err));
 };
