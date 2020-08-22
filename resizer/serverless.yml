@@ -5,14 +5,15 @@ provider:
   memorySize: 512
 
 # you can overwrite defaults here
-#  stage: prod
-  stage: django
-#  region: us-east-1
+#  stage: prod    # Used for tlccdn
+#  stage: django  # Confused
+  stage: wp       # Used for wp (cdn.tickle.life)
+#  region: us-east-1s
   environment:
-#    BUCKET: cdn.tickle.life
-#    URL: http://cdn.tickle.life.s3-website-us-east-1.amazonaws.com
-    BUCKET: tlc-cdn
-    URL: https://tlccdn.tickle.life
+    BUCKET: cdn.tickle.life
+    URL: https://cdn.tickle.life
+#    BUCKET: tlc-cdn
+#    URL: https://tlccdn.tickle.life
 
 functions:
   resizer:
