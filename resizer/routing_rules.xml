@@ -6,8 +6,8 @@
     </Condition>
     <Redirect>
       <Protocol>https</Protocol>
-      <HostName>zhcce4m8m7.execute-api.us-east-1.amazonaws.com</HostName>
-      <ReplaceKeyPrefixWith>wp/resizer?key=</ReplaceKeyPrefixWith>
+      <HostName>lwwc77wrga.execute-api.us-east-1.amazonaws.com</HostName>
+      <ReplaceKeyPrefixWith>ext/ext?key=</ReplaceKeyPrefixWith>
       <HttpRedirectCode>307</HttpRedirectCode>
     </Redirect>
   </RoutingRule>

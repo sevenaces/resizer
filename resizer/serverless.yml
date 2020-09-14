@@ -8,10 +8,13 @@ provider:
 #  stage: prod    # Used for tlccdn
 #  stage: django  # Confused
   stage: wp       # Used for wp (cdn.tickle.life)
+#  stage: ext       # Used for serving external images
 #  region: us-east-1s
   environment:
     BUCKET: cdn.tickle.life
     URL: https://cdn.tickle.life
+#    BUCKET: cdnext.tickle.life
+#    URL: https://cdnext.tickle.life
 #    BUCKET: tlc-cdn
 #    URL: https://tlccdn.tickle.life
 
@@ -23,4 +26,10 @@ functions:
           path: resizer
           method: get
       - s3: ${env:BUCKET}
+#  resizer:
+#    handler: external.serve
+#    events:
+#      - http:
+#          path: ext
+#          method: get
 

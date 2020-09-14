@@ -1,0 +1,83 @@
+"use strict";
+
+const AWS = require("aws-sdk");
+const axios = require('axios');
+const S3 = new AWS.S3({
+    signatureVersion: "v4"
+});
+const Sharp = require("sharp");
+
+const BUCKET = process.env.BUCKET;
+const URL = process.env.URL;
+const ALLOWED_RESOLUTIONS = process.env.ALLOWED_RESOLUTIONS
+    ? new Set(process.env.ALLOWED_RESOLUTIONS.split(/\s*,\s*/))
+    : new Set([]);
+const maxAge = 14 * 24 * 60 * 60
+
+module.exports.serve = function (event, context, callback) {
+    const key = event.queryStringParameters.key;
+    const match = key.match(/(?<webpsupport>webp)?\/?(?<dimensions>(?<width>\d+)x(?<height>\d+))\/(?<originalKey>.*)/);
+
+    // Check if requested resolution is allowed
+    if (0 != ALLOWED_RESOLUTIONS.size && !ALLOWED_RESOLUTIONS.has(match.groups.dimensions)) {
+        callback(null, {
+            statusCode: "403",
+            headers: {},
+            body: ""
+        });
+        return;
+    }
+
+    let width = parseInt(match.groups.width, 10);
+    let height = parseInt(match.groups.height, 10);
+    const originalKey = match.groups.originalKey;
+
+    if (width === 0) {
+        width = null;
+    }
+    if (height === 0) {
+        height = null;
+    }
+
+    let webpSupport = match.groups.webpsupport;
+
+    axios({ originalKey, responseType: 'stream'})
+        .then(function (data) {
+            let image = Sharp(data.Body).resize(width, height, {
+                withoutEnlargement: true
+              })
+            if (webpSupport) {
+                image = image.toFormat("webp")
+            } else {
+                image = image.toFormat("png")
+            }
+            return image.toBuffer()
+        })
+        .then(function (buffer) {
+            let contentType = 'image/png'
+            if (webpSupport) {
+                contentType = 'image/webp'
+            }
+             S3.putObject({
+                    Body: buffer,
+                    Bucket: BUCKET,
+                    ContentType: contentType,
+                    CacheControl: `max-age=${maxAge}`,
+                    Key: key
+                }).promise()
+        })
+        .then(() =>
+            callback(null, {
+                statusCode: "307",
+                headers: {
+                    location: `${URL}/${key}`,
+                    "Cache-Control": "no-cache, no-store, private"
+                },
+
+                    body: ""
+
+                }
+            )
+        )
+        .catch(err => callback(err));
+};
